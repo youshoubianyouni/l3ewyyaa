@@ -15,7 +15,8 @@ import com.fongmi.android.tv.service.PlaybackService;
 import com.google.gson.JsonObject;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import fi.iki.elonen.NanoHTTPD.IHTTPSession;
 import fi.iki.elonen.NanoHTTPD.Response;
@@ -31,13 +32,19 @@ public class Media implements Process {
     public Response doResponse(IHTTPSession session, String url, Map<String, String> files) {
         PlaybackService service = Server.get().getService();
         if (service == null) return Nano.ok("{}");
-        CompletableFuture<String> future = new CompletableFuture<>();
-        App.post(() -> future.complete(build(service.player()).toString()));
+        // CompletableFuture 是 API 24+ 且不会被 desugar 改写，Android 5/6 上会
+        // NoClassDefFoundError，这里改用 CountDownLatch 实现同样的等待语义。
+        String[] result = new String[]{"{}"};
+        CountDownLatch latch = new CountDownLatch(1);
+        App.post(() -> {
+            result[0] = build(service.player()).toString();
+            latch.countDown();
+        });
         try {
-            return Nano.ok(future.get());
-        } catch (Exception ignored) {
-            return Nano.ok("{}");
+            latch.await(3, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
         }
+        return Nano.ok(result[0]);
     }
 
     private JsonObject build(PlayerManager player) {

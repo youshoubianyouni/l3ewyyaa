@@ -4,11 +4,9 @@ import com.whl.quickjs.wrapper.JSCallFunction;
 import com.whl.quickjs.wrapper.JSFunction;
 import com.whl.quickjs.wrapper.JSObject;
 
-import java.util.concurrent.CompletableFuture;
-
 public class Async {
 
-    private CompletableFuture<Object> future;
+    private AsyncFuture<Object> future;
 
     private final JSCallFunction success = args -> {
         future.complete(args != null && args.length > 0 ? args[0] : null);
@@ -22,21 +20,21 @@ public class Async {
     };
 
     private Async() {
-        this.future = new CompletableFuture<>();
+        this.future = new AsyncFuture<>();
     }
 
-    public static CompletableFuture<Object> run(JSObject object, String name, Object... args) {
+    public static AsyncFuture<Object> run(JSObject object, String name, Object... args) {
         return new Async().call(object, name, args);
     }
 
-    private CompletableFuture<Object> call(JSObject object, String name, Object... args) {
+    private AsyncFuture<Object> call(JSObject object, String name, Object... args) {
         JSFunction func = object.getJSFunction(name);
         if (func == null) return empty();
         call(func, args);
         return future;
     }
 
-    private CompletableFuture<Object> empty() {
+    private AsyncFuture<Object> empty() {
         future.complete(null);
         return future;
     }

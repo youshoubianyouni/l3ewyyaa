@@ -29,7 +29,8 @@ import com.fongmi.android.tv.utils.Notify;
 import com.github.catvod.net.OkHttp;
 import com.github.catvod.utils.Path;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import java.util.List;
 import java.util.Map;
@@ -119,17 +120,22 @@ public class Action implements Process {
         int type = TextUtils.isEmpty(typeStr) ? 0 : Integer.parseInt(typeStr);
         if (TextUtils.isEmpty(text)) return json(false, "config url empty");
         Config config = Config.find(text, name, type).save();
-        CompletableFuture<String> future = new CompletableFuture<>();
+        // CompletableFuture 是 API 24+ 且不会被 desugar 改写，Android 5/6 上会
+        // NoClassDefFoundError，这里改用 CountDownLatch 实现同样的等待语义。
+        String[] result = new String[1];
+        CountDownLatch latch = new CountDownLatch(1);
         if (type == 0) {
             VodConfig.load(config, new Callback() {
                 @Override
                 public void success() {
                     ServerEvent.settingSuccess();
-                    future.complete(json(true, "vod config pushed"));
+                    result[0] = json(true, "vod config pushed");
+                    latch.countDown();
                 }
                 @Override
                 public void error(String msg) {
-                    future.complete(json(false, "vod config push failed: " + msg));
+                    result[0] = json(false, "vod config push failed: " + msg);
+                    latch.countDown();
                 }
             });
         } else if (type == 1) {
@@ -137,11 +143,13 @@ public class Action implements Process {
                 @Override
                 public void success() {
                     ServerEvent.settingSuccess();
-                    future.complete(json(true, "live config pushed"));
+                    result[0] = json(true, "live config pushed");
+                    latch.countDown();
                 }
                 @Override
                 public void error(String msg) {
-                    future.complete(json(false, "live config push failed: " + msg));
+                    result[0] = json(false, "live config push failed: " + msg);
+                    latch.countDown();
                 }
             });
         } else if (type == 2) {
@@ -150,19 +158,22 @@ public class Action implements Process {
                 @Override
                 public void success() {
                     ServerEvent.settingSuccess();
-                    future.complete(json(true, "wall config pushed"));
+                    result[0] = json(true, "wall config pushed");
+                    latch.countDown();
                 }
                 @Override
                 public void error(String msg) {
-                    future.complete(json(false, "wall config push failed: " + msg));
+                    result[0] = json(false, "wall config push failed: " + msg);
+                    latch.countDown();
                 }
             });
         }
         try {
-            return future.get(30, java.util.concurrent.TimeUnit.SECONDS);
-        } catch (Exception e) {
+            latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
             return json(false, "request timeout");
         }
+        return result[0] != null ? result[0] : json(false, "request timeout");
     }
 
     private String onAddNas(Map<String, String> params) {
@@ -218,23 +229,29 @@ public class Action implements Process {
         site.setExt(extUrl.toString());
         site.save();
 
-        CompletableFuture<String> future = new CompletableFuture<>();
+        // CompletableFuture 是 API 24+ 且不会被 desugar 改写，Android 5/6 上会
+        // NoClassDefFoundError，这里改用 CountDownLatch 实现同样的等待语义。
+        String[] result = new String[1];
+        CountDownLatch latch = new CountDownLatch(1);
         VodConfig.get().init().load(new Callback() {
             @Override
             public void success() {
-                future.complete(json(true, "added: " + name));
+                result[0] = json(true, "added: " + name);
+                latch.countDown();
             }
             @Override
             public void error(String msg) {
-                future.complete(json(false, "add failed: " + msg));
+                result[0] = json(false, "add failed: " + msg);
+                latch.countDown();
             }
         });
 
         try {
-            return future.get(30, java.util.concurrent.TimeUnit.SECONDS);
-        } catch (Exception e) {
+            latch.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
             return json(false, "request timeout");
         }
+        return result[0] != null ? result[0] : json(false, "request timeout");
     }
 
     private String onAddMedia(Map<String, String> params) {

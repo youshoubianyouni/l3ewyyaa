@@ -1,6 +1,5 @@
 package com.fongmi.android.tv.ui.adapter;
 
-import android.os.Build;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,8 +59,8 @@ public class CinemaPosterAdapter extends RecyclerView.Adapter<CinemaPosterAdapte
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Vod item = items.get(position);
-        // View.setForeground 仅 API 23+（LinearLayout 无 FrameLayout 的早期实现），Android 5 跳过
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) holder.binding.card.setForeground(FocusColor.posterForeground());
+        // 卡片是 FrameLayout，其 setForeground 自 API 1 起就存在，各版本通用
+        holder.binding.card.setForeground(FocusColor.posterForeground());
         holder.binding.name.setText(item.getName());
         ImgUtil.load(item.getName(), item.getPic(), holder.binding.image);
         String remarks = item.getRemarks();

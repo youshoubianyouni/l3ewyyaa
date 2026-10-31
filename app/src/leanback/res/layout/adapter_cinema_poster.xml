@@ -8,7 +8,10 @@
     android:focusable="true"
     android:focusableInTouchMode="true">
 
-    <LinearLayout
+    <!-- 卡片改用 FrameLayout：View.setForeground 是 API 23+ 才有的，而
+         FrameLayout 自带的 setForeground 从 API 1 就存在，Android 5/6 上
+         既能正常绘制焦点高亮，也不会触发 NoSuchMethodError。 -->
+    <FrameLayout
         android:id="@+id/card"
         android:layout_width="120dp"
         android:layout_height="190dp"
@@ -16,50 +19,57 @@
         android:clipChildren="false"
         android:clipToPadding="false"
         android:elevation="4dp"
-        android:foreground="@drawable/selector_tv_cinema_poster"
-        android:orientation="vertical">
+        android:foreground="@drawable/selector_tv_cinema_poster">
 
-        <FrameLayout
-            android:layout_width="120dp"
-            android:layout_height="155dp">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/image"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/white_10"
-                android:scaleType="centerCrop"
-                app:shapeAppearanceOverlay="@style/Vod.Grid.Cinema" />
-
-            <TextView
-                android:id="@+id/remarks"
-                android:layout_width="wrap_content"
-                android:layout_height="18dp"
-                android:layout_gravity="bottom|start"
-                android:layout_marginStart="6dp"
-                android:layout_marginBottom="6dp"
-                android:background="@drawable/bg_cinema_tag_chip"
-                android:gravity="center"
-                android:paddingStart="6dp"
-                android:paddingEnd="6dp"
-                android:singleLine="true"
-                android:textColor="@color/white"
-                android:textSize="9sp"
-                android:visibility="gone" />
-        </FrameLayout>
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/name"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="35dp"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:maxLines="2"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp"
-            android:paddingTop="4dp"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="120dp"
+                android:layout_height="155dp">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/image"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/white_10"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/Vod.Grid.Cinema" />
+
+                <TextView
+                    android:id="@+id/remarks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="18dp"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginBottom="6dp"
+                    android:background="@drawable/bg_cinema_tag_chip"
+                    android:gravity="center"
+                    android:paddingStart="6dp"
+                    android:paddingEnd="6dp"
+                    android:singleLine="true"
+                    android:textColor="@color/white"
+                    android:textSize="9sp"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="2"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:paddingTop="4dp"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
 </FrameLayout>
